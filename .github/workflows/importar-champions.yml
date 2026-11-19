@@ -1,0 +1,46 @@
+
+name: Importar icones Pokemon Champions
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  importar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Acessar repositorio H!P
+        uses: actions/checkout@v4
+
+      - name: Baixar icones da PokeAPI
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse \
+            --branch master \
+            https://github.com/PokeAPI/sprites.git \
+            /tmp/pokeapi-sprites
+
+          git -C /tmp/pokeapi-sprites sparse-checkout set \
+            sprites/pokemon/versions/generation-ix/champions/icons
+
+          mkdir -p champions/icons
+
+          cp -a \
+            /tmp/pokeapi-sprites/sprites/pokemon/versions/generation-ix/champions/icons/. \
+            champions/icons/
+
+      - name: Salvar icones no repositorio
+        run: |
+          git config user.name "H!P Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add champions/icons/
+
+          if git diff --cached --quiet; then
+            echo "Nenhum arquivo novo para salvar."
+          else
+            git commit -m "Importar icones Pokemon Champions"
+            git push
+          fi
